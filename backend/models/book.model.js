@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 
-const BookModel = (sequelize) => {
+const BookModel = (sequelize,Category) => {
   const Book = sequelize.define("Book", {
     BookID: {
       type: DataTypes.INTEGER,
@@ -34,7 +34,17 @@ const BookModel = (sequelize) => {
   }, {
     tableName: "Books",
     timestamps: false,
+    indexes: [
+    {
+      unique: true,
+      fields: ['Title', 'Author'], 
+    },
+  ]
   });
+
+  if (Category) {
+    Book.belongsTo(Category, { foreignKey: "CategoryID" });
+  }
   
   return Book;
 };

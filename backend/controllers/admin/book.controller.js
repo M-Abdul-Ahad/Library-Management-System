@@ -1,19 +1,26 @@
 import BookModel from '../../models/book.model.js';
+import CategoryModel from '../../models/category.model.js'
 import { Op } from 'sequelize';
 import sequelize from '../../models/index.js';
 
-const Book = BookModel(sequelize);
-
-
+const Category=CategoryModel(sequelize)
+const Book = BookModel(sequelize,Category);
 
 export const addBook = async (req, res) => {
   try {
     const { Title, Author, TotalCopies, AvailableCopies, CategoryID } = req.body;
 
-    const category = await Category.findByPk(CategoryID);
-    if (!category) {
-      return res.status(400).json({ message: 'Invalid CategoryID: category does not exist' });
+    const existingBook = await Book.findOne({
+      where: {
+        Title,
+        Author,
+      },
+    });
+
+    if (existingBook) {
+      return res.status(400).json({ message: 'Book with this title and author already exists' });
     }
+
 
     const newBook = await Book.create({
       Title,
@@ -86,12 +93,6 @@ export const getAllBooks = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch books', error: err.message });
   }
 };
-
-
-
-
-
-
 
 export const searchBooks = async (req, res) => {
   try {
