@@ -35,6 +35,11 @@ const TransactionModel = (sequelize, Book, Member) => {
       type: DataTypes.DATEONLY,
       allowNull: true,  
     },
+    Fine: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 0,
+  },
   }, {
     tableName: 'Transactions',
     timestamps: false,

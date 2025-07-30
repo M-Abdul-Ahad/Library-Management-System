@@ -39,17 +39,6 @@ export const issueBook = async (req, res) => {
       return res.status(404).json({ message: "Book or Member not found." });
     }
 
-    const alreadyIssued = await Transaction.findOne({
-      where: {
-        BookID,
-        ReturnDate: null,
-      },
-    });
-
-    if (alreadyIssued) {
-      return res.status(400).json({ message: "Book is already issued and not returned yet." });
-    }
-
     const issueDate = dayjs().format("YYYY-MM-DD");
     const dueDate = dayjs(issueDate).add(DaysToBorrow || 14, "day").format("YYYY-MM-DD"); 
 
@@ -60,6 +49,9 @@ export const issueBook = async (req, res) => {
       DueDate: dueDate,
       ReturnDate: null,
     });
+
+    book.AvailableCopies -= 1;
+    await book.save();
 
     await bookRequest.update({
       Status: "approved",
@@ -76,3 +68,139 @@ export const issueBook = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
+export const rejectIssueRequest = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+
+    if (!requestId) {
+      return res.status(400).json({ message: "Request ID is required." });
+    }
+
+    const bookRequest = await BookRequest.findOne({
+      where: { RequestID: requestId, Status: "pending" },
+    });
+
+    if (!bookRequest) {
+      return res.status(404).json({
+        message: "Book request not found or already processed.",
+      });
+    }
+
+    await bookRequest.update({
+      Status: "rejected",
+      AdminResponseDate: dayjs().format("YYYY-MM-DD"),
+    });
+
+    return res.status(200).json({
+      message: "Issue request rejected successfully.",
+    });
+  } catch (error) {
+    console.error("Error in rejecting issue request:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const acceptBookReturn = async (req, res) => {
+  try {
+    const { requestId } = req.body;
+
+    if (!requestId) {
+      return res.status(400).json({ message: "Request ID is required." });
+    }
+
+    const bookRequest = await BookRequest.findOne({
+      where: { RequestID: requestId, Status: "pending", RequestType: "return" },
+    });
+
+    if (!bookRequest) {
+      return res.status(404).json({ message: "Book request not found or already processed." });
+    }
+
+    const { MemberID, BookID } = bookRequest;
+
+    const book = await Book.findByPk(BookID);
+    const member = await Member.findByPk(MemberID);
+
+    if (!book || !member) {
+      return res.status(404).json({ message: "Book or Member not found." });
+    }
+
+    const transaction = await Transaction.findOne({
+      where: {
+        BookID,
+        MemberID,
+        ReturnDate: null,
+      },
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Active transaction not found." });
+    }
+
+    const today = dayjs();
+    const dueDate = dayjs(transaction.DueDate);
+    const overdueDays = today.diff(dueDate, "day");
+
+    const fineAmount = overdueDays > 0 ? overdueDays * 50 : 0;
+
+    await transaction.update({
+      ReturnDate: today.format("YYYY-MM-DD"),
+      Fine: fineAmount,
+    });
+
+    await bookRequest.update({
+      Status: "approved",
+      AdminResponseDate: dayjs().format("YYYY-MM-DD"),
+    });
+
+    book.AvailableCopies += 1;
+    await book.save();
+
+    return res.status(200).json({ message: "Book return accepted successfully." ,fine: fineAmount});
+  } catch (error) {
+    console.error("Error in accepting book return:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const getAllBorrowRequests = async (req, res) => {
+  try {
+    const requests = await BookRequest.findAll({
+      where: {
+        RequestType: "borrow",
+      },
+      order: [["RequestDate", "DESC"]],
+      include: [
+        { model: Book, attributes: ["Title", "BookID"] },
+        { model: Member, attributes: ["MemberName", "MemberID"] },
+      ],
+    });
+
+    return res.status(200).json({ borrowRequests: requests });
+  } catch (error) {
+    console.error("Error fetching borrow requests:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const getAllReturnRequests = async (req, res) => {
+  try {
+    const requests = await BookRequest.findAll({
+      where: {
+        RequestType: "return",
+      },
+      order: [["RequestDate", "DESC"]],
+      include: [
+        { model: Book, attributes: ["Title", "BookID"] },
+        { model: Member, attributes: ["MemberName", "MemberID"] },
+      ],
+    });
+
+    return res.status(200).json({ returnRequests: requests });
+  } catch (error) {
+    console.error("Error fetching return requests:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
