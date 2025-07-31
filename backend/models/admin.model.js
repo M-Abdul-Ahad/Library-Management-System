@@ -14,6 +14,11 @@ const AdminModel = (sequelize) => {
     PasswordHash: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    Role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'admin'
     }
   }, {
     tableName: "Admin", 

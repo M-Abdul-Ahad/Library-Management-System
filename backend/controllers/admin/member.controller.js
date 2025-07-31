@@ -7,7 +7,7 @@ const Member = MemberModel(sequelize);
 
 export const addMember = async (req, res) => {
   try {
-    const { MemberName, Email, Password } = req.body;
+    const { MemberName, Email, Password, Image } = req.body;
 
     const existingMember = await Member.findOne({ where: { Email } });
     if (existingMember) {
@@ -21,6 +21,7 @@ export const addMember = async (req, res) => {
       MemberName,
       Email,
       PasswordHash: hashedPassword,
+      Image: Image || null, // allow optional image
     });
 
     res.status(201).json({
@@ -31,33 +32,41 @@ export const addMember = async (req, res) => {
         Email: newMember.Email,
         JoinDate: newMember.JoinDate,
         IsActive: newMember.IsActive,
+        Image: newMember.Image,
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to add member", error: err });
+    res.status(500).json({ message: "Failed to add member", error: err.message });
   }
 };
+
 
 export const updateMember = async (req, res) => {
   try {
     const { id } = req.params;
-    const { MemberName, Email, IsActive } = req.body;
+    const { MemberName, Email, IsActive, Image } = req.body;
 
     const member = await Member.findByPk(id);
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    await member.update({ MemberName, Email, IsActive });
+    await member.update({
+      MemberName,
+      Email,
+      IsActive,
+      Image: Image || member.Image, // retain previous if not updated
+    });
 
     res.status(200).json({
       message: "Member updated successfully",
       member,
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to update member", error: err });
+    res.status(500).json({ message: "Failed to update member", error: err.message });
   }
 };
+
 
 export const deleteMember = async (req, res) => {
   try {

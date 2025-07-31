@@ -31,6 +31,11 @@ const BookModel = (sequelize,Category) => {
         key: 'CategoryID',
       },
     },
+    Image: {
+      type: DataTypes.STRING,
+      allowNull: true, 
+    }
+
   }, {
     tableName: "Books",
     timestamps: false,

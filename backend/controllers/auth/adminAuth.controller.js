@@ -24,12 +24,12 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken({  email: admin.Email });
+    const token = generateToken({  email: admin.Email,role: 'admin' });
 
     res.status(200).json({
       token,
       admin: {
-        email: admin.Email,
+        email: admin.Email
       },
     });
   } catch (err) {

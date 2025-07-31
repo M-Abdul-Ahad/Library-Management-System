@@ -31,6 +31,11 @@ const MemberModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    Image: {
+      type: DataTypes.STRING,
+      allowNull: true, 
+    }
+
   }, {
     tableName: "Members",  
     timestamps: false        
