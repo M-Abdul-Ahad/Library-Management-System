@@ -22,6 +22,31 @@ export const loginAdmin = createAsyncThunk(
   }
 );
 
+export const loadAdminFromToken = createAsyncThunk(
+  "adminAuth/loadAdminFromToken",
+  async (_, { rejectWithValue }) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) return rejectWithValue("No token");
+
+    try {
+      const response = await axios.get("http://localhost:3000/api/auth/admin/checkauth", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return {
+        admin: response.data.admin,
+        token: token,
+      };
+    } catch (err) {
+      localStorage.removeItem("adminToken");
+      return rejectWithValue("Session expired");
+    }
+  }
+);
+
+
 const adminAuthSlice = createSlice({
   name: "adminAuth",
   initialState: {
@@ -52,7 +77,21 @@ const adminAuthSlice = createSlice({
       .addCase(loginAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(loadAdminFromToken.pending, (state) => {
+  state.loading = true;
+})
+.addCase(loadAdminFromToken.fulfilled, (state, action) => {
+  state.loading = false;
+  state.admin = action.payload.admin;
+  state.token = action.payload.token;
+})
+.addCase(loadAdminFromToken.rejected, (state) => {
+  state.loading = false;
+  state.admin = null;
+  state.token = null;
+})
+
   },
 });
 

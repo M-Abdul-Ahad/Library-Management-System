@@ -36,3 +36,35 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
 };
+
+export const checkAuth = async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "No token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: "Invalid role" });
+    }
+
+    const admin = await Admin.findOne({ where: { Email: decoded.email } });
+
+    if (!admin) {
+      return res.status(401).json({ message: "Admin not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      admin: {
+        email: admin.Email,
+      },
+    });
+  } catch (err) {
+    res.status(401).json({ message: "Token expired or invalid" });
+  }
+};

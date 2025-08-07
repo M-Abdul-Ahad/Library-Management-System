@@ -7,11 +7,9 @@ import {
   searchBooks
 } from '../../controllers/admin/book.controller.js';
 
-import { authenticateToken,authorizeAdmin } from '../../middleware/auth.middleware.js';
-
 const router = express.Router();
 
-router.use(authenticateToken,authorizeAdmin)
+
 
 router.post('/add', addBook);             
 router.put('/:BookID', updateBook);    

@@ -42,6 +42,34 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// in memberAuthSlice.js
+
+export const loadUserFromToken = createAsyncThunk(
+  "memberAuth/loadUserFromToken",
+  async (_, { rejectWithValue }) => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) return rejectWithValue("No token");
+
+    try {
+      const response = await axios.get("http://localhost:3000/api/auth/member/checkauth", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return {
+        user: response.data.user,
+        token: token,
+      };
+    } catch (err) {
+      sessionStorage.removeItem("authToken");
+      return rejectWithValue("Session expired");
+    }
+  }
+);
+
+
+
 const memberAuthSlice = createSlice({
   name: "memberAuth",
   initialState: {
@@ -54,7 +82,7 @@ const memberAuthSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      localStorage.removeItem("authToken");
+      sessionStorage.removeItem("authToken");
     },
   },
   extraReducers: (builder) => {
@@ -67,7 +95,7 @@ const memberAuthSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        localStorage.setItem("authToken", action.payload.token);
+        sessionStorage.setItem("authToken", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -81,14 +109,29 @@ const memberAuthSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        localStorage.setItem("authToken", action.payload.token);
+        sessionStorage.setItem("authToken", action.payload.token);
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(loadUserFromToken.pending, (state) => {
+  state.loading = true;
+})
+.addCase(loadUserFromToken.fulfilled, (state, action) => {
+  state.loading = false;
+  state.user = action.payload.user;
+  state.token = action.payload.token;
+})
+.addCase(loadUserFromToken.rejected, (state) => {
+  state.loading = false;
+  state.user = null;
+  state.token = null;
+})
+
   },
 });
+
 
 export const { logout } = memberAuthSlice.actions;
 export default memberAuthSlice.reducer;

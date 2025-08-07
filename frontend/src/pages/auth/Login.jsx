@@ -9,6 +9,8 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -16,8 +18,19 @@ const Login = () => {
   const memberState = useSelector((state) => state.memberAuth);
   const adminState = useSelector((state) => state.adminAuth);
 
+  useEffect(() => {
+  if (!hasSubmitted) return;
+  if (isAdmin && adminState.token) {
+    navigate("/admin/dashboard");
+  } else if (!isAdmin && memberState.token) {
+    navigate("/member/home");
+  }
+}, [adminState.token, memberState.token, isAdmin, navigate]);
+
+
   const handleLogin = (e) => {
     e.preventDefault();
+    setHasSubmitted(true);
     if (isAdmin) {
       dispatch(loginAdmin({ email, password }));
     } else {
@@ -25,14 +38,7 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    if (memberState.token && !isAdmin) {
-      navigate("/home");
-    }
-    if (adminState.token && isAdmin) {
-      navigate("/dashboard");
-    }
-  }, [memberState.token, adminState.token, isAdmin, navigate]);
+
 
   const loading = isAdmin ? adminState.loading : memberState.loading;
   const error = isAdmin ? adminState.error : memberState.error;

@@ -66,3 +66,34 @@ export const login=async(req,res)=>{
         res.status(500).json({ message: "Login failed", error: err.message });
     }
 }
+
+export const checkAuth = async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "No token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await Member.findByPk(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Invalid user" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user.MemberID,
+        name: user.MemberName,
+        email: user.Email,
+      },
+    });
+  } catch (err) {
+    res.status(401).json({ success: false, message: "Token expired or invalid" });
+  }
+};
+
+
