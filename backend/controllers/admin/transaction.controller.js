@@ -13,8 +13,6 @@ const Member = MemberModel(sequelize);
 const Transaction=TransactionModel(sequelize,Book,Member)
 const BookRequest=BookRequestModel(sequelize,Book,Member)
 
-
-
 export const issueBook = async (req, res) => {
   try {
     const { requestId } = req.body;
@@ -203,4 +201,51 @@ export const getAllReturnRequests = async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 };
+
+export const getAllRequests = async (req, res) => {
+  try {
+    const requests = await BookRequest.findAll({
+      order: [["RequestDate", "DESC"]],
+      include: [
+        { model: Book, attributes: ["Title", "BookID"] },
+        { model: Member, attributes: ["MemberName", "MemberID"] },
+      ],
+    });
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.error("Error fetching all requests:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const getRequestsByStatus = async (req, res) => {
+  try {
+    const { status } = req.params; // or req.query if you prefer ?status=pending
+
+    if (!status) {
+      return res.status(400).json({ message: "Status is required." });
+    }
+
+    const validStatuses = ["pending", "approved", "rejected"];
+    if (!validStatuses.includes(status.toLowerCase())) {
+      return res.status(400).json({ message: "Invalid status value." });
+    }
+
+    const requests = await BookRequest.findAll({
+      where: { Status: status.toLowerCase() },
+      order: [["RequestDate", "DESC"]],
+      include: [
+        { model: Book, attributes: ["Title", "BookID"] },
+        { model: Member, attributes: ["MemberName", "MemberID"] },
+      ],
+    });
+
+    return res.status(200).json({ requests });
+  } catch (error) {
+    console.error("Error fetching requests by status:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 

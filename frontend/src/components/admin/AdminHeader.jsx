@@ -42,6 +42,7 @@ const AdminHeader = () => {
         <a href="/admin/dashboard" className="hover:text-white transition">Dashboard</a>
         <a href="/admin/books" className="hover:text-white transition">Books</a>
         <a href="/admin/members" className="hover:text-white transition">Members</a>
+        <a href="/admin/requests" className="hover:text-white transition">Requests</a>
       </nav>
 
       {/* Right - Profile */}
@@ -53,7 +54,7 @@ const AdminHeader = () => {
        <img
           src="/images/admin-avatar.jpeg"
           alt="Admin Avatar"
-          className="w-8 h-8 rounded-full shadow-sm object-cover transform scale-125"
+          className="w-8 h-8 rounded-full shadow-sm object-cover"
         />
 
           <span>{admin?.email || "Admin"}</span>

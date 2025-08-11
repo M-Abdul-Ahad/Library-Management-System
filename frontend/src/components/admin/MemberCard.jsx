@@ -1,29 +1,29 @@
 import { FaEdit, FaTrash, FaInfoCircle } from "react-icons/fa";
 
 const MemberCard = ({ member, onEdit, onDelete, onDetails }) => {
-  const { name, email, isActive, avatar } = member;
+  const { MemberName, Email, IsActive, Image } = member;
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl hover:shadow-indigo-300 hover:-translate-y-1 transition-transform duration-300 w-80 overflow-hidden transform hover:scale-[1.02] hover:rotate-[0.5deg]">
       {/* Avatar */}
       <div className="flex justify-center pt-6">
         <img
-          src={avatar || "/default-avatar.png"}
-          alt={name}
+          src={Image || "/default-avatar.png"}
+          alt={MemberName}
           className="w-24 h-24 object-cover rounded-full border-4 border-indigo-500 shadow"
         />
       </div>
 
       {/* Content */}
       <div className="p-5 text-center">
-        <h3 className="text-lg font-bold text-gray-800 mb-1">{name}</h3>
-        <p className="text-sm text-gray-600 mb-1">{email}</p>
+        <h3 className="text-lg font-bold text-gray-800 mb-1">{MemberName}</h3>
+        <p className="text-sm text-gray-600 mb-1">{Email}</p>
         <p
           className={`text-sm font-medium ${
-            isActive ? "text-green-600" : "text-red-500"
+            IsActive ? "text-green-600" : "text-red-500"
           }`}
         >
-          {isActive ? "Active" : "Inactive"}
+          {IsActive ? "Active" : "Inactive"}
         </p>
 
         {/* Buttons */}

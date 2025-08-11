@@ -247,7 +247,7 @@ const BooksManagement = () => {
 />
 
 <BookDetailsModal
-  isOpen={isDetailsOpen}
+  isOpen={isDetailsOpen}                                                         
   onClose={() => setIsDetailsOpen(false)}
   book={detailsBook}
 />

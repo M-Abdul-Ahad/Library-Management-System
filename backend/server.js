@@ -7,6 +7,7 @@ import transactionRoutes from './routes/admin/transaction.routes.js'
 import memberBookRoutes from './routes/member/book.routes.js'
 import bookRequestRoutes from './routes/member/bookRequest.routes.js'
 import accountRoutes from './routes/member/account.routes.js'
+import dashboardRoutes from './routes/admin/dashboard.routes.js'
 import cors from 'cors';
 
 
@@ -27,6 +28,7 @@ app.use('/api/admin/transaction',transactionRoutes)
 app.use('/api/member/book',memberBookRoutes)
 app.use('/api/member/request',bookRequestRoutes)
 app.use('/api/member/account',accountRoutes)
+app.use('/api/admin/dashboard',dashboardRoutes)
 
 
 app.listen(3000, () => {

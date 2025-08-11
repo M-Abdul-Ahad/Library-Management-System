@@ -1,9 +1,16 @@
 import sequelize from "../../models/index.js";
 import { Op } from "sequelize";
 import MemberModel from "../../models/member.model.js";
+import BookModel from '../../models/book.model.js';
+import CategoryModel from '../../models/category.model.js'
+import TransactionModel from "../../models/transaction.model.js";
 import bcrypt from "bcryptjs";
 
 const Member = MemberModel(sequelize);
+const Category=CategoryModel(sequelize)
+const Book = BookModel(sequelize,Category);
+const Transaction=TransactionModel(sequelize,Book,Member)
+
 
 export const addMember = async (req, res) => {
   try {
@@ -115,5 +122,50 @@ export const searchMembersByName = async (req, res) => {
     res.status(200).json({ members });
   } catch (err) {
     res.status(500).json({ message: "Search failed", error: err });
+  }
+};
+
+export const getMemberDetailsWithBorrowedBooks = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const member = await Member.findByPk(id, {
+      attributes: { exclude: ["PasswordHash"] },
+    });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    const borrowedTransactions = await Transaction.findAll({
+      where: {
+        MemberID: id,
+        ReturnDate: null, // means not yet returned (assumed 'borrowed')
+      },
+      include: [
+        {
+          model: Book,
+          attributes: ["BookID", "Title", "Author"],
+        },
+      ],
+    });
+
+    const borrowedBooks = borrowedTransactions.map((tx) => ({
+      TransactionID: tx.TransactionID,
+      IssueDate: tx.IssueDate,
+      DueDate: tx.DueDate,
+      Book: tx.Book,
+    }));
+
+    res.status(200).json({
+      member,
+      borrowedBooks,
+    });
+  } catch (err) {
+    console.error("Full error object:", err);
+    res.status(500).json({
+      message: "Failed to retrieve member details",
+      error: err.message,
+    });
   }
 };
